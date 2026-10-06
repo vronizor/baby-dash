@@ -200,9 +200,10 @@ def actogram_payload(snapshot: Snapshot, settings: Settings, now: datetime, days
     }
 
 
-def _first_activity(snapshot: Snapshot) -> datetime | None:
-    starts = [f["start"].min() for f in (snapshot.data.feeds, snapshot.data.sleeps) if not f.is_empty()]
-    return min(starts) if starts else None
+def _logged_labels(snapshot: Snapshot, rows: pl.DataFrame) -> pl.Series:
+    activity = pl.concat([snapshot.data.feeds.select("start", "end"), snapshot.data.sleeps.select("start", "end")])
+    instant = activity.with_columns(end=pl.max_horizontal("end", pl.col("start") + pl.duration(microseconds=1)))
+    return metrics.split_by_rows(instant, rows)["label"].unique()
 
 
 def trends_payload(snapshot: Snapshot, settings: Settings, now: datetime, days: int) -> dict[str, Any]:
@@ -211,7 +212,7 @@ def trends_payload(snapshot: Snapshot, settings: Settings, now: datetime, days: 
     today = day_label(now, rules)
     rows = rows_frame(label_range(today, days + ROLLING_NIGHTS - 1), rules)
     nights = nights_for_rows(rows, rules)
-    first = _first_activity(snapshot)
+    logged = _logged_labels(snapshot, rows)
 
     table = (
         rows.select("label", "row_start", "row_end")
@@ -220,7 +221,7 @@ def trends_payload(snapshot: Snapshot, settings: Settings, now: datetime, days: 
         .join(metrics.feeding_by_day(snapshot.data.feeds, d.episodes, rows, rules), on="label")
         .join(metrics.suspect_days(d.suspects, rows), on="label")
         .sort("label")
-        .with_columns(has_data=(pl.col("row_end") > lit_dt(first, rules)) if first else pl.lit(False))
+        .with_columns(has_data=pl.col("label").is_in(logged.implode()))
     )
     value_cols = ["night_sleep_h", "day_sleep_h", "longest_night_h", "bottle_volume", "bottle_missing",
                   "breast_episodes", "feed_episodes"]

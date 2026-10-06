@@ -12,13 +12,27 @@ from baby_dash.timebase import day_label, is_night, row_bounds
 
 class TestFeedings:
     def test_kind_mapping_and_amount_flag(self, rules):
-        rows = [feeding("2026-10-06 10:00", method=m, amount=a) for m, a in [
-            ("bottle", 90), ("bottle", None), ("left breast", None), ("right breast", None),
-            ("both breasts", None), ("parent fed", None), ("self fed", None), ("something new", None)]]
+        rows = [feeding("2026-10-06 10:00", method=m, amount=a, type=t) for m, t, a in [
+            ("bottle", "formula", 90),
+            ("bottle", "breast milk", None),
+            ("left breast", "breast milk", None),
+            ("right breast", "breast milk", None),
+            ("both breasts", "breast milk", None),
+            ("parent fed", "breast milk", 60),
+            ("parent fed", "formula", None),
+            ("self fed", "fortified breast milk", 30),
+            ("parent fed", "solid food", None),
+            ("self fed", "solid food", None),
+            ("bottle", "solid food", None),
+            ("something new", "breast milk", None),
+        ]]
         feeds, dups = normalize_feedings(rows, rules)
         assert dups == 0
-        assert feeds["kind"].to_list() == ["bottle", "bottle", "breast", "breast", "breast", "other", "other", "other"]
-        assert feeds["amount_missing"].to_list() == [False, True, False, False, False, False, False, False]
+        assert feeds["kind"].to_list() == [
+            "bottle", "bottle", "breast", "breast", "breast", "bottle", "bottle", "bottle",
+            "other", "other", "other", "other"]
+        assert feeds["amount_missing"].to_list() == [
+            False, True, False, False, False, False, True, False, False, False, False, False]
 
     def test_times_are_converted_to_tz_and_duration_ignores_string(self, rules):
         row = feeding("2026-10-06 10:00", "2026-10-06 10:25")

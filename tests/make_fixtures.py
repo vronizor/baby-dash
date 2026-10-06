@@ -56,7 +56,7 @@ def edge_cases() -> None:
             feeding("2026-10-05 15:30", method="bottle"),
             feeding("2026-10-05 17:45", "2026-10-05 18:10", "both breasts"),
             feeding("2026-10-05 23:50", "2026-10-06 00:10", "left breast"),
-            feeding("2026-10-06 03:30", method="parent fed"),
+            feeding("2026-10-06 03:30", method="parent fed", type="solid food"),
             feeding("2026-10-06 04:00", method="bottle", amount=100),
             feeding("2026-10-06 08:00", method="bottle", amount=110),
             feeding("2026-10-06 11:00", "2026-10-06 11:20"),
@@ -82,6 +82,21 @@ def small_cases() -> None:
     write("bottle_only", feedings=[feeding(f"2026-10-0{d} {h:02d}:00", method="bottle", amount=90 + h)
                                    for d in (4, 5, 6) for h in (1, 5, 9, 13, 17, 21) if (d, h) < (6, 12)])
     write("two_children", children=[CHILD, dict(CHILD, id=2, slug="sam-test", first_name="Sam")])
+
+
+def hiatus() -> None:
+    days = [f"2026-09-{d}" for d in (28, 29, 30)] + [f"2026-10-0{d}" for d in (4, 5, 6)]
+    feeds, sleeps = [], []
+    for day in days:
+        for hh in ("02", "06", "09", "12", "15", "18", "21"):
+            stamp = f"{day} {hh}:00"
+            if not ("2026-09-30 12:00" < stamp < "2026-10-04 08:00") and stamp <= "2026-10-06 12:00":
+                feeds.append(feeding(stamp, f"{day} {hh}:20", "both breasts"))
+        if day not in ("2026-09-30", "2026-10-04"):
+            sleeps.append(sleep(f"{day} 13:00", f"{day} 14:30"))
+    feeds.append(feeding("2026-10-05 16:30", method="parent fed", type="breast milk", amount=70))
+    feeds.append(feeding("2026-10-06 10:30", method="parent fed", type="formula"))
+    write("hiatus", feedings=feeds, sleeps=sleeps)
 
 
 def realistic_10d() -> None:
@@ -153,6 +168,7 @@ if __name__ == "__main__":
     edge_cases()
     small_cases()
     realistic_10d()
+    hiatus()
     for f in sorted(OUT.glob("*.json")):
         data = json.loads(f.read_text())
         print(f"{f.name}: {len(data['feedings']['results'])} feedings, {len(data['sleep']['results'])} sleeps")

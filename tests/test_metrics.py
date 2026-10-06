@@ -22,7 +22,7 @@ class TestFeedEpisodes:
             feeding("2026-10-06 10:45", method="bottle", amount=60),
             feeding("2026-10-06 13:00", method="bottle", amount=90),
             feeding("2026-10-06 13:20", method="bottle", amount=None),
-            feeding("2026-10-06 16:00", method="self fed"),
+            feeding("2026-10-06 16:00", method="self fed", type="solid food"),
             feeding("2026-10-06 16:30", "2026-10-06 16:40", "left breast"),
         ])
         ep = metrics.feed_episodes(feeds, rules)

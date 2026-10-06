@@ -86,7 +86,10 @@ async def _verify(settings: Settings) -> bool:
         enum = _method_enum(schema)
         report(None, f"feeding method enum in schema: {enum or 'not exposed'}")
         feedings = await client.get_all("/api/feedings/", {"limit": 500})
-        report(None, f"feeding methods seen in data: {dict(Counter(f.get('method') for f in feedings))}")
+        combos = Counter((f.get("method"), f.get("type")) for f in feedings)
+        report(None, "feeding method × type seen in data (solids only when type is 'solid food'):")
+        for (method, type_), n in combos.most_common():
+            print(f"         {n:5d}  {method} / {type_}")
 
         timers = await client.get_all("/api/timers/")
         fields = sorted({k for t in timers for k in t})

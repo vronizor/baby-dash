@@ -161,3 +161,31 @@ class TestRealistic:
         p = views.now_payload(snap, SETTINGS, self.NOW)
         assert p["feed_gap_usual"]["enough"] and p["wake_window_usual"]["enough"]
         assert p["feed_gap_usual"]["p25_h"] <= p["feed_gap_usual"]["median_h"] <= p["feed_gap_usual"]["p75_h"]
+
+
+class TestHiatusAndConfusingCategories:
+    NOW = at("2026-10-06 12:30")
+
+    @pytest.fixture
+    def snap(self):
+        return snapshot_of("hiatus", self.NOW)
+
+    def test_days_without_any_entry_are_no_data_not_zero(self, snap):
+        p = views.trends_payload(snap, SETTINGS, self.NOW, 14)
+        by = {r["label"]: r for r in p["rows"]}
+        for label in ("2026-10-01", "2026-10-02", "2026-10-03"):
+            assert by[label]["has_data"] is False
+            assert by[label]["night_sleep_h"] is None and by[label]["breast_episodes"] is None
+            assert by[label]["suspect_gap"] is True
+        assert by["2026-09-30"]["has_data"] and by["2026-10-04"]["has_data"]
+        assert by["2026-10-04"]["breast_episodes"] == 3
+
+    def test_parent_fed_milk_counts_as_bottle(self, snap):
+        p = views.trends_payload(snap, SETTINGS, self.NOW, 14)
+        by = {r["label"]: r for r in p["rows"]}
+        assert by["2026-10-05"]["bottle_volume"] == 70.0
+        assert by["2026-10-06"]["bottle_missing"] == 1
+        acto = views.actogram_payload(snap, SETTINGS, self.NOW, 7)
+        today = [r for r in acto["rows"] if r["label"] == "2026-10-06"][0]
+        bottle = [f for f in today["feeds"] if f["time_label"] == "10:30"][0]
+        assert (bottle["kind"], bottle["amount_missing"]) == ("bottle", True)

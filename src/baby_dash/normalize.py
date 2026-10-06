@@ -10,14 +10,9 @@ import polars as pl
 from baby_dash.config import Rules
 from baby_dash.timebase import dt_type, hours, lit_dt
 
-FEED_KIND = {
-    "bottle": "bottle",
-    "left breast": "breast",
-    "right breast": "breast",
-    "both breasts": "breast",
-    "parent fed": "other",
-    "self fed": "other",
-}
+BREAST_METHODS = ["left breast", "right breast", "both breasts"]
+GIVEN_METHODS = ["bottle", "parent fed", "self fed"]
+SOLID_TYPES = ["solid food"]
 
 
 @dataclass(frozen=True)
@@ -35,6 +30,16 @@ class Normalized:
     timers: list[Timer]
     duplicate_feeds: int
     duplicate_sleeps: int
+
+
+def feed_kind(method: pl.Expr, type_: pl.Expr) -> pl.Expr:
+    """Solids only when the type says so: "parent fed" milk is a bottle in practice."""
+    return (
+        pl.when(type_.is_in(SOLID_TYPES)).then(pl.lit("other"))
+        .when(method.is_in(BREAST_METHODS)).then(pl.lit("breast"))
+        .when(method.is_in(GIVEN_METHODS)).then(pl.lit("bottle"))
+        .otherwise(pl.lit("other"))
+    )
 
 
 def feeds_schema(rules: Rules) -> dict[str, pl.DataType]:
@@ -88,9 +93,9 @@ def normalize_feedings(
     frame = _scope(frame, rules, child_id, since)
     before = frame.height
     frame = frame.unique(subset=["start", "end", "method", "type", "amount"], keep="first", maintain_order=True)
-    frame = frame.with_columns(
-        kind=pl.col("method").replace_strict(FEED_KIND, default="other", return_dtype=pl.String)
-    ).with_columns(amount_missing=(pl.col("kind") == "bottle") & pl.col("amount").is_null())
+    frame = frame.with_columns(kind=feed_kind(pl.col("method"), pl.col("type"))).with_columns(
+        amount_missing=(pl.col("kind") == "bottle") & pl.col("amount").is_null()
+    )
     frame = frame.select(feeds_schema(rules).keys()).cast(feeds_schema(rules)).sort("start")
     return frame, before - frame.height
 
