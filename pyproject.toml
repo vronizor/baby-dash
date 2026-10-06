@@ -1,0 +1,32 @@
+[project]
+name = "baby-dash"
+version = "0.1.0"
+description = "Read-only, mobile-first rhythm dashboard on top of Baby Buddy"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.142.2",
+    "httpx>=0.28.1",
+    "polars>=1.44.2",
+    "tzdata>=2026.5",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+baby-dash = "baby_dash.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/baby_dash"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient` is deprecated"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

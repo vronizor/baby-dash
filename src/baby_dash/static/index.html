@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Baby dashboard</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" style="stroke: var(--hatch); stroke-width: 2"></line>
+    </pattern>
+  </defs>
+</svg>
+<main>
+  <header class="top">
+    <h1 id="child-name">Baby</h1>
+    <span id="updated" class="muted"></span>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="now" aria-label="Now">
+    <div class="tiles">
+      <article class="tile" id="tile-feed">
+        <h2 class="tile-title">Since last feed</h2>
+        <div class="big" data-elapsed>—</div>
+        <div class="meter" hidden><div class="band"></div><div class="median"></div><div class="marker"></div></div>
+        <p class="caption" data-caption></p>
+        <p class="caption muted" data-detail></p>
+      </article>
+      <article class="tile" id="tile-wake">
+        <h2 class="tile-title" data-title>Awake for</h2>
+        <div class="big" data-elapsed>—</div>
+        <div class="meter" hidden><div class="band"></div><div class="median"></div><div class="marker"></div></div>
+        <p class="caption" data-caption></p>
+        <p class="caption muted" data-detail></p>
+      </article>
+    </div>
+    <nav class="actions">
+      <a id="link-feeding" class="btn" href="#">+ Feeding</a>
+      <a id="link-sleep" class="btn" href="#">+ Sleep</a>
+      <a id="link-timers" class="btn" href="#">Timers</a>
+    </nav>
+    <ul id="timers" class="timers" hidden></ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Actogram</h2>
+      <div class="seg" role="group" aria-label="Actogram range" data-target="actogram">
+        <button type="button" data-days="7" aria-pressed="true">7 d</button>
+        <button type="button" data-days="14" aria-pressed="false">14 d</button>
+      </div>
+    </div>
+    <div class="legend" id="acto-legend">
+      <span><i class="sw sw-sleep"></i>sleep</span>
+      <span><i class="sw sw-breast"></i>breast</span>
+      <span><i class="sw sw-bottle"></i>bottle (area = volume)</span>
+      <span><i class="sw sw-missing"></i>bottle, no amount</span>
+      <span><i class="sw sw-night"></i>night</span>
+      <span><i class="sw sw-hatch"></i>logging gap</span>
+    </div>
+    <div id="actogram" class="chart"></div>
+    <p class="hint muted">Tap a mark for details.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Trends</h2>
+      <div class="seg" role="group" aria-label="Trends range" data-target="trends">
+        <button type="button" data-days="14" aria-pressed="true">14 d</button>
+        <button type="button" data-days="30" aria-pressed="false">30 d</button>
+      </div>
+    </div>
+    <p class="hint muted">Today is partial and drawn lighter. Hatched days had a logging gap.</p>
+    <h3 class="chart-title">Longest night stretch <span class="muted">· dots per night, line = 5-night rolling median</span></h3>
+    <div id="trend-longest" class="chart"></div>
+    <h3 class="chart-title">Sleep per day <span class="legend inline"><span><i class="sw sw-night-sleep"></i>night</span><span><i class="sw sw-day-sleep"></i>day</span></span></h3>
+    <div id="trend-sleep" class="chart"></div>
+    <h3 class="chart-title">Bottle volume per day <span class="muted" data-unit></span></h3>
+    <div id="trend-bottle" class="chart"></div>
+    <h3 class="chart-title">Breastfeed episodes per day</h3>
+    <div id="trend-breast" class="chart"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Feed gaps by time of day</h2></div>
+    <p class="hint muted">Gap length vs when it started, last 14 days. Darker = more recent. Hollow = spans a logging gap.</p>
+    <div id="gaps" class="chart"></div>
+  </section>
+
+  <footer id="quality" class="muted"></footer>
+</main>
+<script src="/static/vendor/d3.min.js"></script>
+<script src="/static/vendor/plot.umd.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

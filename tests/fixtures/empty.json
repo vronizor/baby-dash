@@ -1,0 +1,36 @@
+{
+ "children": {
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+   {
+    "id": 1,
+    "first_name": "Alix",
+    "last_name": "Test",
+    "birth_date": "2026-08-20",
+    "birth_time": null,
+    "slug": "alix-test",
+    "picture": null
+   }
+  ]
+ },
+ "feedings": {
+  "count": 0,
+  "next": null,
+  "previous": null,
+  "results": []
+ },
+ "sleep": {
+  "count": 0,
+  "next": null,
+  "previous": null,
+  "results": []
+ },
+ "timers": {
+  "count": 0,
+  "next": null,
+  "previous": null,
+  "results": []
+ }
+}

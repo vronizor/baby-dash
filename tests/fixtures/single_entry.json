@@ -1,0 +1,49 @@
+{
+ "children": {
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+   {
+    "id": 1,
+    "first_name": "Alix",
+    "last_name": "Test",
+    "birth_date": "2026-08-20",
+    "birth_time": null,
+    "slug": "alix-test",
+    "picture": null
+   }
+  ]
+ },
+ "feedings": {
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+   {
+    "id": 36,
+    "child": 1,
+    "start": "2026-10-06T09:00:00+02:00",
+    "end": "2026-10-06T09:00:00+02:00",
+    "duration": "00:00:00",
+    "type": "formula",
+    "method": "bottle",
+    "amount": 80,
+    "notes": null,
+    "tags": []
+   }
+  ]
+ },
+ "sleep": {
+  "count": 0,
+  "next": null,
+  "previous": null,
+  "results": []
+ },
+ "timers": {
+  "count": 0,
+  "next": null,
+  "previous": null,
+  "results": []
+ }
+}

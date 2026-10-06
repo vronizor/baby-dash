@@ -1,0 +1,269 @@
+{
+ "children": {
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+   {
+    "id": 1,
+    "first_name": "Alix",
+    "last_name": "Test",
+    "birth_date": "2026-08-20",
+    "birth_time": null,
+    "slug": "alix-test",
+    "picture": null
+   }
+  ]
+ },
+ "feedings": {
+  "count": 12,
+  "next": null,
+  "previous": null,
+  "results": [
+   {
+    "id": 17,
+    "child": 1,
+    "start": "2026-10-05T06:00:00+02:00",
+    "end": "2026-10-05T06:00:00+02:00",
+    "duration": "00:00:00",
+    "type": "formula",
+    "method": "bottle",
+    "amount": 120,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 16,
+    "child": 1,
+    "start": "2026-10-05T09:00:00+02:00",
+    "end": "2026-10-05T09:15:00+02:00",
+    "duration": "00:15:00",
+    "type": "breast milk",
+    "method": "left breast",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 10016,
+    "child": 1,
+    "start": "2026-10-05T09:00:00+02:00",
+    "end": "2026-10-05T09:15:00+02:00",
+    "duration": "00:15:00",
+    "type": "breast milk",
+    "method": "left breast",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 18,
+    "child": 1,
+    "start": "2026-10-05T09:05:00+02:00",
+    "end": "2026-10-05T09:20:00+02:00",
+    "duration": "00:15:00",
+    "type": "breast milk",
+    "method": "right breast",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 19,
+    "child": 1,
+    "start": "2026-10-05T12:30:00+02:00",
+    "end": "2026-10-05T12:30:00+02:00",
+    "duration": "00:00:00",
+    "type": "breast milk",
+    "method": "left breast",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 20,
+    "child": 1,
+    "start": "2026-10-05T15:30:00+02:00",
+    "end": "2026-10-05T15:30:00+02:00",
+    "duration": "00:00:00",
+    "type": "formula",
+    "method": "bottle",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 21,
+    "child": 1,
+    "start": "2026-10-05T17:45:00+02:00",
+    "end": "2026-10-05T18:10:00+02:00",
+    "duration": "00:25:00",
+    "type": "breast milk",
+    "method": "both breasts",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 22,
+    "child": 1,
+    "start": "2026-10-05T23:50:00+02:00",
+    "end": "2026-10-06T00:10:00+02:00",
+    "duration": "00:20:00",
+    "type": "breast milk",
+    "method": "left breast",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 23,
+    "child": 1,
+    "start": "2026-10-06T03:30:00+02:00",
+    "end": "2026-10-06T03:30:00+02:00",
+    "duration": "00:00:00",
+    "type": "breast milk",
+    "method": "parent fed",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 24,
+    "child": 1,
+    "start": "2026-10-06T04:00:00+02:00",
+    "end": "2026-10-06T04:00:00+02:00",
+    "duration": "00:00:00",
+    "type": "formula",
+    "method": "bottle",
+    "amount": 100,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 25,
+    "child": 1,
+    "start": "2026-10-06T08:00:00+02:00",
+    "end": "2026-10-06T08:00:00+02:00",
+    "duration": "00:00:00",
+    "type": "formula",
+    "method": "bottle",
+    "amount": 110,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 26,
+    "child": 1,
+    "start": "2026-10-06T11:00:00+02:00",
+    "end": "2026-10-06T11:20:00+02:00",
+    "duration": "00:20:00",
+    "type": "breast milk",
+    "method": "left breast",
+    "amount": null,
+    "notes": null,
+    "tags": []
+   }
+  ]
+ },
+ "sleep": {
+  "count": 7,
+  "next": null,
+  "previous": null,
+  "results": [
+   {
+    "id": 27,
+    "child": 1,
+    "start": "2026-10-05T10:00:00+02:00",
+    "end": "2026-10-05T11:30:00+02:00",
+    "duration": "01:30:00",
+    "nap": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 28,
+    "child": 1,
+    "start": "2026-10-05T13:00:00+02:00",
+    "end": "2026-10-05T14:00:00+02:00",
+    "duration": "01:00:00",
+    "nap": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 29,
+    "child": 1,
+    "start": "2026-10-05T14:03:00+02:00",
+    "end": "2026-10-05T15:00:00+02:00",
+    "duration": "00:57:00",
+    "nap": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 30,
+    "child": 1,
+    "start": "2026-10-05T17:00:00+02:00",
+    "end": "2026-10-05T19:00:00+02:00",
+    "duration": "02:00:00",
+    "nap": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 31,
+    "child": 1,
+    "start": "2026-10-05T20:30:00+02:00",
+    "end": "2026-10-06T03:00:00+02:00",
+    "duration": "06:30:00",
+    "nap": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 32,
+    "child": 1,
+    "start": "2026-10-06T04:30:00+02:00",
+    "end": "2026-10-06T07:30:00+02:00",
+    "duration": "03:00:00",
+    "nap": null,
+    "notes": null,
+    "tags": []
+   },
+   {
+    "id": 33,
+    "child": 1,
+    "start": "2026-10-06T09:00:00+02:00",
+    "end": "2026-10-06T10:00:00+02:00",
+    "duration": "01:00:00",
+    "nap": null,
+    "notes": null,
+    "tags": []
+   }
+  ]
+ },
+ "timers": {
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": [
+   {
+    "id": 34,
+    "child": 1,
+    "name": "Sleep",
+    "start": "2026-10-06T12:10:00+02:00",
+    "duration": "00:10:00",
+    "user": 1
+   },
+   {
+    "id": 35,
+    "child": null,
+    "name": null,
+    "start": "2026-10-06T11:55:00+02:00",
+    "duration": "00:10:00",
+    "user": 1
+   }
+  ]
+ }
+}
