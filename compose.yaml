@@ -7,10 +7,8 @@ services:
     env_file: .env
     networks:
       - babybuddy
-    # No published port: Caddy reaches baby-dash:8080 over a shared Docker network.
-    # If Caddy runs on the host instead, publish loopback only:
-    # ports:
-    #   - "127.0.0.1:8080:8080"
+    ports:
+      - "${DASH_BIND:-127.0.0.1}:${DASH_PORT:-8090}:8080"
 
 networks:
   babybuddy:

@@ -40,7 +40,7 @@ baby-dash.your-tailnet.ts.net {
 }
 ```
 
-If Caddy runs on the host, uncomment the loopback `ports:` entry in `compose.yaml` and use `reverse_proxy 127.0.0.1:8080`. Match the hostname/TLS lines to your other tailnet services.
+If Caddy runs on the host, use `reverse_proxy 127.0.0.1:8090`. The port is published on loopback by default (`DASH_BIND`, `DASH_PORT` in `.env`). Without Caddy, set `DASH_BIND=0.0.0.0` and open `http://<pi>:8090` over the tailnet. Match the hostname/TLS lines to your other tailnet services.
 
 ### Create the read-only user
 
