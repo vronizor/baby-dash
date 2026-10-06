@@ -18,9 +18,10 @@ FILTERS = ["child", "end", "end_max", "end_min", "start", "start_max", "start_mi
 
 
 class FakeBabyBuddy:
-    def __init__(self, fixture: str, *, schema: bool = True) -> None:
+    def __init__(self, fixture: str, *, schema: bool = True, honor_filters: bool = True) -> None:
         self.data = load_fixture(fixture)
         self.schema = schema
+        self.honor_filters = honor_filters
         self.up = True
         self.calls: list[tuple[str, str, dict[str, str]]] = []
 
@@ -37,14 +38,18 @@ class FakeBabyBuddy:
             return httpx.Response(403, json={"detail": "You do not have permission"})
         if request.url.path == "/api/schema/":
             if not self.schema:
-                return httpx.Response(404)
+                return httpx.Response(500, text="<h1>Server Error (500)</h1>", headers={"content-type": "text/html"})
             params_list = [{"name": n, "in": "query"} for n in FILTERS]
             return httpx.Response(200, json={"openapi": "3.0.2", "paths": {
                 p: {"get": {"parameters": params_list}} for p in ("/api/feedings/", "/api/sleep/")}})
         if request.url.path not in ENDPOINTS:
             return httpx.Response(404, text="Not found")
         items = list(self.data[ENDPOINTS[request.url.path]])
+        if not self.honor_filters:
+            params = {k: v for k, v in params.items() if k in ("limit", "offset")}
         if "child" in params:
+            if int(params["child"]) not in {c["id"] for c in self.data["children"]}:
+                return httpx.Response(400, json={"child": ["Select a valid choice."]})
             items = [i for i in items if i.get("child") == int(params["child"])]
         if "end_min" in params:
             cutoff = datetime.fromisoformat(params["end_min"])
@@ -97,18 +102,24 @@ def test_one_fetch_serves_all_endpoints_within_ttl():
         assert sum(1 for m, p, _ in bb.calls if p == "/api/feedings/") == 2
 
 
-def test_confirmed_filters_are_sent_and_unconfirmed_are_not():
-    app, bb, _ = make()
-    with TestClient(app) as c:
-        c.get("/api/now")
-    feed_call = next(params for m, p, params in bb.calls if p == "/api/feedings/")
-    assert feed_call["child"] == "1" and "end_min" in feed_call
+def _first_data_fetch(bb: FakeBabyBuddy) -> dict[str, str]:
+    return [params for m, p, params in bb.calls
+            if m == "GET" and p == "/api/feedings/" and params.get("limit") != "1"][0]
 
-    app, bb, _ = make(schema=False)
+
+@pytest.mark.parametrize("schema, honor, sent, source", [
+    (True, True, True, "schema"),
+    (False, True, True, "probe"),
+    (False, False, False, "probe"),
+])
+def test_filters_used_only_once_confirmed(schema, honor, sent, source):
+    app, bb, _ = make(schema=schema, honor_filters=honor)
     with TestClient(app) as c:
-        assert c.get("/api/now").status_code == 200
-    feed_call = next(params for m, p, params in bb.calls if p == "/api/feedings/")
-    assert "child" not in feed_call and "end_min" not in feed_call
+        body = c.get("/api/now").json()
+        assert body["last_feed"]["start_label"] == "12:25"
+    params = _first_data_fetch(bb)
+    assert ("child" in params and "end_min" in params) is sent
+    assert app.state.store._client.filter_source["/api/feedings/"] == source
 
 
 def test_never_sends_a_write_method():

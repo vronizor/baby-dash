@@ -74,12 +74,13 @@ async def _verify(settings: Settings) -> bool:
                    " (expected 403 for a read-only user: Baby Buddy maps OPTIONS to the add permission)"))
 
         schema = await _schema(raw)
+        report(None, f"GET /api/schema/ → {schema.get('_status', 'unreachable')}")
         found = await client.discover_filters()
         for path in DATA_ENDPOINTS:
             names = sorted(found.get(path, set()))
             usable = {"child", "end_min"} <= set(names)
             report(True if usable else None,
-                   f"{path} filters: {names or 'none found'} → " +
+                   f"{path} filters: {names or 'none found'} (via {client.filter_source.get(path)}) → " +
                    ("server-side child + end_min filtering will be used" if usable else "will fetch everything"))
 
         enum = _method_enum(schema)
@@ -104,14 +105,16 @@ async def _verify(settings: Settings) -> bool:
 
 
 async def _schema(raw: httpx.AsyncClient) -> dict[str, Any]:
+    last: dict[str, Any] = {}
     for path in ("/api/schema/", "/api/schema"):
         try:
             r = await raw.get(path, headers={"Accept": "application/vnd.oai.openapi+json"})
             if r.status_code == 200:
-                return r.json()
+                return {**r.json(), "_status": 200}
+            last = {"_status": f"{r.status_code} {r.headers.get('content-type', '')}"}
         except (httpx.HTTPError, ValueError):
             pass
-    return {}
+    return last
 
 
 def _method_enum(schema: dict[str, Any]) -> list[str] | None:

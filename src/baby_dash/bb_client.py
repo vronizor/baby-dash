@@ -12,6 +12,9 @@ from baby_dash.config import ConfigError
 
 DATA_ENDPOINTS = ("/api/feedings/", "/api/sleep/")
 SCHEMA_ACCEPT = "application/vnd.oai.openapi+json, application/json;q=0.9"
+PROBE_FAR_FUTURE = "2999-01-01T00:00:00+00:00"
+PROBE_MISSING_CHILD = 0
+REJECTED = -1
 
 
 class BabyBuddyError(Exception):
@@ -67,6 +70,7 @@ class ReadOnlyBabyBuddy:
             timeout=timeout,
         )
         self._page_size = page_size
+        self.filter_source: dict[str, str] = {}
 
     async def aclose(self) -> None:
         await self._http.aclose()
@@ -101,12 +105,18 @@ class ReadOnlyBabyBuddy:
         """Confirm filter names before relying on them.
 
         OPTIONS lists filters but Baby Buddy maps OPTIONS to the *add* permission, so a read-only
-        token gets 403 there; the OpenAPI schema is readable with view rights and lists them too.
+        token gets 403 there; the OpenAPI schema lists them too but 500s on some versions. Last resort:
+        probe each filter with values whose effect is unambiguous.
         """
-        found = await self._filters_from_schema()
+        schema = await self._filters_from_schema()
+        found: dict[str, set[str]] = {}
         for path in DATA_ENDPOINTS:
-            if path not in found:
-                found[path] = await self._filters_from_options(path)
+            if schema.get(path):
+                found[path], self.filter_source[path] = schema[path], "schema"
+            elif names := await self._filters_from_options(path):
+                found[path], self.filter_source[path] = names, "options"
+            else:
+                found[path], self.filter_source[path] = await self._filters_from_probe(path), "probe"
         return found
 
     async def _filters_from_schema(self) -> dict[str, set[str]]:
@@ -132,6 +142,26 @@ class ReadOnlyBabyBuddy:
         except (httpx.HTTPError, json.JSONDecodeError):
             pass
         return set()
+
+    async def _filters_from_probe(self, path: str) -> set[str]:
+        async def count(params: dict[str, Any]) -> int | None:
+            try:
+                response = await self._http.get(path, params={**params, "limit": 1})
+                if response.status_code == 400:
+                    return REJECTED
+                return int(response.json()["count"]) if response.status_code == 200 else None
+            except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+                return None
+
+        total = await count({})
+        if not total or total < 0:
+            return set()
+        confirmed = set()
+        if await count({"end_min": PROBE_FAR_FUTURE}) == 0:
+            confirmed.add("end_min")
+        if await count({"child": PROBE_MISSING_CHILD}) in (0, REJECTED):
+            confirmed.add("child")
+        return confirmed
 
     async def fetch(self, child: Child, since: datetime, filters: dict[str, set[str]]) -> RawData:
         def params_for(path: str) -> dict[str, Any]:

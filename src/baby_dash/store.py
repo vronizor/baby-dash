@@ -87,7 +87,8 @@ class Store:
             log.info("Using child %s (id %s)", self._child.slug, self._child.id)
         if self._filters is None:
             self._filters = await self._client.discover_filters()
-            log.info("Confirmed API filters: %s", {k: sorted(v) for k, v in self._filters.items()})
+            log.info("Confirmed API filters: %s (via %s)", {k: sorted(v) for k, v in self._filters.items()},
+                     self._client.filter_source)
         return self._child
 
     async def _refresh(self, now: datetime) -> Snapshot:
