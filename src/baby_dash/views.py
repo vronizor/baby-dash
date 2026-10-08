@@ -155,13 +155,18 @@ def actogram_payload(snapshot: Snapshot, settings: Settings, now: datetime, days
                                     "continues_before", "continues_after"])
 
     feed_marks = (
-        d.episodes.with_columns(label=day_label_expr(pl.col("start"), rules))
+        d.episodes.sort("start")
+        .with_columns(
+            label=day_label_expr(pl.col("start"), rules),
+            since_prev_h=hours(pl.col("start") - pl.col("start").shift(1)).round(3),
+        )
         .join(rows.select("label", "row_start"), on="label", how="inner")
         .with_columns(h=hours(pl.col("start") - pl.col("row_start")).round(3),
                       time_label=pl.col("start").dt.strftime("%H:%M"))
         .sort("start")
     )
-    feeds = _grouped(feed_marks, ["h", "time_label", "kind", "bottle_volume", "amount_missing", "n_feeds"])
+    feeds = _grouped(feed_marks, ["h", "time_label", "kind", "bottle_volume", "amount_missing", "n_feeds",
+                                  "since_prev_h"])
 
     night_spans = _spans(nights.rename({"night_start": "start", "night_end": "end"}), rows)
     suspect_spans = _spans(d.suspects, rows)

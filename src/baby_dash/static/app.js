@@ -165,6 +165,20 @@ function tickFormatter(ticks) {
   return h => m.get(h) ?? "";
 }
 
+const KIND_LABEL = { breast: "Breast", bottle: "Bottle", mixed: "Breast + bottle" };
+
+function feedTip(f, unit) {
+  const amount = f.bottle_volume != null ? ` · ${f.bottle_volume} ${unit}` : f.amount_missing ? " · no amount" : "";
+  const lines = [`${KIND_LABEL[f.kind]} ${f.time_label}${amount}`];
+  if (f.since_prev_h != null) lines.push(`${fmtDur(f.since_prev_h)} since previous`);
+  if (f.n_feeds > 1) lines.push(`${f.n_feeds} entries merged`);
+  return lines.join("\n");
+}
+
+function tipStyle() {
+  return { fill: css("--tip-bg"), stroke: css("--tip-border"), fontSize: 12 };
+}
+
 function renderActogram() {
   const el = $("#actogram");
   const p = state.actogram;
@@ -187,15 +201,9 @@ function renderActogram() {
   const tips = [
     ...sleeps.map(s => ({
       x: (s.start_h + s.end_h) / 2, label: s.label,
-      title: `Sleep ${s.start_label}–${s.end_label}\n${fmtDur(s.duration_h)}`,
+      title: `Sleep ${s.start_label}–${s.end_label} · ${fmtDur(s.duration_h)}`,
     })),
-    ...feeds.map(f => ({
-      x: f.h, label: f.label,
-      title: `${f.kind === "mixed" ? "Breast + bottle" : f.kind === "bottle" ? "Bottle" : "Breast"} ${f.time_label}` +
-        (f.bottle_volume != null ? `\n${f.bottle_volume} ${unit}` : "") +
-        (f.amount_missing ? "\namount not logged" : "") +
-        (f.n_feeds > 1 ? `\n${f.n_feeds} entries merged` : ""),
-    })),
+    ...feeds.map(f => ({ x: f.h, label: f.label, title: feedTip(f, unit) })),
   ];
 
   const plot = Plot.plot({
@@ -232,7 +240,7 @@ function renderActogram() {
         x: "h", y: "label", r: ring, stroke: css("--feed"), strokeWidth: 1.6, strokeDasharray: "2,2", fill: "none",
       }),
       today ? Plot.tickX([{ h: p.now_h, label: today.label }], { x: "h", y: "label", stroke: css("--ink"), strokeWidth: 2 }) : null,
-      Plot.tip(tips, Plot.pointer({ x: "x", y: "label", title: "title", maxRadius: 28, fontSize: 12 })),
+      Plot.tip(tips, Plot.pointer({ x: "x", y: "label", title: "title", maxRadius: 28, ...tipStyle() })),
     ],
   });
   mount(el, plot);
@@ -292,7 +300,7 @@ function renderTrends() {
       Plot.lineY(withData, { x: "i", y: "longest_night_median_h", stroke: css("--sleep"), strokeWidth: 2, curve: "monotone-x" }),
       Plot.dot(longest, { x: "i", y: "longest_night_h", r: 4, fill: css("--sleep"), stroke: css("--surface"), strokeWidth: 1.5, opacity: op }),
       Plot.tip(longest, Plot.pointerX({
-        x: "i", y: "longest_night_h", fontSize: 12,
+        x: "i", y: "longest_night_h", ...tipStyle(),
         title: r => tipTitle(r, `longest ${fmtDur(r.longest_night_h)}` +
           (r.longest_night_median_h != null ? `\n5-night median ${fmtDur(r.longest_night_median_h)}` : "")),
       })),
@@ -313,7 +321,7 @@ function renderTrends() {
         order: ["night", "day"], z: "part", opacity: d => op(d.r), stroke: css("--surface"), strokeWidth: 1, rx: 2,
       }),
       Plot.tip(withData, Plot.pointerX({
-        x: "i", y: r => r.night_sleep_h + r.day_sleep_h, fontSize: 12,
+        x: "i", y: r => r.night_sleep_h + r.day_sleep_h, ...tipStyle(),
         title: r => tipTitle(r, `night ${fmtDur(r.night_sleep_h)}\nday ${fmtDur(r.day_sleep_h)}\ntotal ${fmtDur(r.night_sleep_h + r.day_sleep_h)}`),
       })),
     ],
@@ -329,7 +337,7 @@ function renderTrends() {
         x: "i", y: "bottle_volume", text: () => "+?", dy: -7, fill: css("--ink-2"), fontSize: 12,
       }),
       Plot.tip(withData, Plot.pointerX({
-        x: "i", y: "bottle_volume", fontSize: 12,
+        x: "i", y: "bottle_volume", ...tipStyle(),
         title: r => tipTitle(r, `${r.bottle_volume} ${unit}` + (r.bottle_missing ? `\n+ ${r.bottle_missing} bottle(s) without amount` : "")),
       })),
     ],
@@ -343,7 +351,7 @@ function renderTrends() {
       suspectBackdrop(rows, topBreast),
       Plot.barY(withData, { x: "i", y: "breast_episodes", fill: css("--feed"), opacity: op, rx: 2 }),
       Plot.tip(withData, Plot.pointerX({
-        x: "i", y: "breast_episodes", fontSize: 12,
+        x: "i", y: "breast_episodes", ...tipStyle(),
         title: r => tipTitle(r, `${r.breast_episodes} breastfeed episode(s)\n${r.feed_episodes} feed episode(s) total`),
       })),
     ],
@@ -386,7 +394,7 @@ function renderGaps() {
       }),
       Plot.dot(gaps.filter(g => g.suspect), { x: "tod_h", y: "length_h", stroke: "days_ago", r: 4.5, strokeWidth: 1.5 }),
       Plot.tip(gaps, Plot.pointer({
-        x: "tod_h", y: "length_h", fontSize: 12, maxRadius: 30,
+        x: "tod_h", y: "length_h", maxRadius: 30, ...tipStyle(),
         title: g => `from ${g.start_label}\n${fmtDur(g.length_h)} (${g.period})${g.suspect ? "\nspans a logging gap" : ""}`,
       })),
     ],

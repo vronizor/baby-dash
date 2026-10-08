@@ -54,6 +54,9 @@ class TestEdgeCaseFixture:
         assert today["sleep_in_progress"] == [{"start_h": pytest.approx(18.167, abs=1e-3), "end_h": 18.5}]
         assert yday["feeds"][-1]["h"] == pytest.approx(23.75)
         assert today["feeds"][0]["h"] == pytest.approx(5.833, abs=1e-3)
+        assert today["feeds"][0]["since_prev_h"] == pytest.approx(6.083, abs=1e-3)
+        assert today["feeds"][1]["since_prev_h"] == pytest.approx(4.167, abs=1e-3)
+        assert p["rows"][-2]["feeds"][0]["since_prev_h"] is None
         assert [f["kind"] for f in today["feeds"]] == ["breast", "bottle", "bottle", "breast"]
         assert yday["feeds"][3]["amount_missing"] is True
         assert today["night"] == [{"start_h": 2.0, "end_h": 13.0}]

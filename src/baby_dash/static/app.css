@@ -19,6 +19,9 @@
   --warn-ink: #6b4a00;
   --err-bg: #fde8e8;
   --err-ink: #8a1f1f;
+  --tip-bg: #ffffff;
+  --tip-ink: #0b0b0b;
+  --tip-border: #c3c2b7;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,6 +46,9 @@
     --warn-ink: #fad27a;
     --err-bg: #3d1414;
     --err-ink: #f5b5b5;
+    --tip-bg: #2c2c2a;
+    --tip-ink: #ffffff;
+    --tip-border: #5c5b56;
   }
 }
 
@@ -128,6 +134,7 @@ main {
 .chart-title .muted { font-weight: 400; }
 .chart { width: 100%; min-height: 40px; }
 .chart svg { display: block; overflow: visible; }
+.chart g[aria-label="tip"] { color: var(--tip-ink); }
 .chart .empty { font-size: 13px; color: var(--muted); padding: 14px 0; }
 .hint { font-size: 12px; margin: 6px 0 4px; }
 
