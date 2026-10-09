@@ -12,6 +12,8 @@
   --sleep-night: #1c5cab;
   --sleep-day: #86b6ef;
   --feed: #eb6834;
+  --solid: #1baf7a;
+  --solid-edge: #12744f;
   --night: #eceae4;
   --band: #d6d4cc;
   --hatch: rgba(208, 59, 59, 0.45);
@@ -39,6 +41,8 @@
     --sleep-night: #3987e5;
     --sleep-day: #86b6ef;
     --feed: #d95926;
+    --solid: #199e70;
+    --solid-edge: #1a1a19;
     --night: #262624;
     --band: #45443f;
     --hatch: rgba(230, 103, 103, 0.5);
@@ -155,6 +159,10 @@ main {
 .sw-breast { border: 1.5px solid var(--feed); border-radius: 50%; }
 .sw-bottle { background: var(--feed); border-radius: 50%; }
 .sw-missing { border: 1.5px dashed var(--feed); border-radius: 50%; }
+.sw-solid {
+  background: var(--solid); border: 1px solid var(--solid-edge); border-radius: 1px;
+  width: 9px; height: 9px; transform: rotate(45deg); margin: 0 2px;
+}
 .sw-night { background: var(--night); border: 1px solid var(--border); }
 .sw-hatch {
   background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 5px);

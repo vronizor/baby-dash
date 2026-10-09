@@ -56,7 +56,7 @@ def edge_cases() -> None:
             feeding("2026-10-05 15:30", method="bottle"),
             feeding("2026-10-05 17:45", "2026-10-05 18:10", "both breasts"),
             feeding("2026-10-05 23:50", "2026-10-06 00:10", "left breast"),
-            feeding("2026-10-06 03:30", method="parent fed", type="solid food"),
+            feeding("2026-10-06 03:30", method="parent fed", type="solid food") | {"notes": "Broccoli\n(steamed)"},
             feeding("2026-10-06 04:00", method="bottle", amount=100),
             feeding("2026-10-06 08:00", method="bottle", amount=110),
             feeding("2026-10-06 11:00", "2026-10-06 11:20"),

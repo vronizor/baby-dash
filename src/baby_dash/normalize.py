@@ -35,7 +35,7 @@ class Normalized:
 def feed_kind(method: pl.Expr, type_: pl.Expr) -> pl.Expr:
     """Solids only when the type says so: "parent fed" milk is a bottle in practice."""
     return (
-        pl.when(type_.is_in(SOLID_TYPES)).then(pl.lit("other"))
+        pl.when(type_.is_in(SOLID_TYPES)).then(pl.lit("solid"))
         .when(method.is_in(BREAST_METHODS)).then(pl.lit("breast"))
         .when(method.is_in(GIVEN_METHODS)).then(pl.lit("bottle"))
         .otherwise(pl.lit("other"))
@@ -53,6 +53,7 @@ def feeds_schema(rules: Rules) -> dict[str, pl.DataType]:
         "kind": pl.String,
         "amount": pl.Float64,
         "amount_missing": pl.Boolean,
+        "notes": pl.String,
     }
 
 
@@ -88,7 +89,7 @@ def normalize_feedings(
     frame = _raw_frame(
         raw,
         {"id": pl.Int64, "child": pl.Int64, "start": pl.String, "end": pl.String,
-         "method": pl.String, "type": pl.String, "amount": pl.Float64},
+         "method": pl.String, "type": pl.String, "amount": pl.Float64, "notes": pl.String},
     )
     frame = _scope(frame, rules, child_id, since)
     before = frame.height

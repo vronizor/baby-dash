@@ -168,6 +168,19 @@ def actogram_payload(snapshot: Snapshot, settings: Settings, now: datetime, days
     feeds = _grouped(feed_marks, ["h", "time_label", "kind", "bottle_volume", "amount_missing", "n_feeds",
                                   "since_prev_h"])
 
+    solid_marks = (
+        snapshot.data.feeds.filter(pl.col("kind") == "solid")
+        .with_columns(label=day_label_expr(pl.col("start"), rules))
+        .join(rows.select("label", "row_start"), on="label", how="inner")
+        .with_columns(
+            h=hours(pl.col("start") - pl.col("row_start")).round(3),
+            time_label=pl.col("start").dt.strftime("%H:%M"),
+            note=pl.col("notes").str.replace_all(r"\s+", " ").str.strip_chars(),
+        )
+        .sort("start")
+    )
+    solids = _grouped(solid_marks, ["h", "time_label", "note"])
+
     night_spans = _spans(nights.rename({"night_start": "start", "night_end": "end"}), rows)
     suspect_spans = _spans(d.suspects, rows)
     suspect_flags = dict(metrics.suspect_days(d.suspects, rows).iter_rows())
@@ -199,6 +212,7 @@ def actogram_payload(snapshot: Snapshot, settings: Settings, now: datetime, days
                 "sleeps": sleeps.get(r["label"], []),
                 "sleep_in_progress": in_progress.get(r["label"], []),
                 "feeds": feeds.get(r["label"], []),
+                "solids": solids.get(r["label"], []),
             }
             for r in rows.iter_rows(named=True)
         ],

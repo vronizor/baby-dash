@@ -30,7 +30,7 @@ class TestFeedings:
         assert dups == 0
         assert feeds["kind"].to_list() == [
             "bottle", "bottle", "breast", "breast", "breast", "bottle", "bottle", "bottle",
-            "other", "other", "other", "other"]
+            "solid", "solid", "solid", "other"]
         assert feeds["amount_missing"].to_list() == [
             False, True, False, False, False, False, True, False, False, False, False, False]
 

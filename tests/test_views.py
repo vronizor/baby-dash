@@ -56,11 +56,17 @@ class TestEdgeCaseFixture:
         assert today["feeds"][0]["h"] == pytest.approx(5.833, abs=1e-3)
         assert today["feeds"][0]["since_prev_h"] == pytest.approx(6.083, abs=1e-3)
         assert today["feeds"][1]["since_prev_h"] == pytest.approx(4.167, abs=1e-3)
-        assert p["rows"][-2]["feeds"][0]["since_prev_h"] is None
+        assert yday["feeds"][0]["since_prev_h"] is None
         assert [f["kind"] for f in today["feeds"]] == ["breast", "bottle", "bottle", "breast"]
         assert yday["feeds"][3]["amount_missing"] is True
         assert today["night"] == [{"start_h": 2.0, "end_h": 13.0}]
         assert not any(r["suspect_gap"] for r in p["rows"])
+
+    def test_solids_are_separate_marks_with_their_note(self, snap):
+        p = views.actogram_payload(snap, SETTINGS, self.NOW, 7)
+        today = _row(p, "2026-10-06")
+        assert today["solids"] == [{"h": 9.5, "time_label": "03:30", "note": "Broccoli (steamed)"}]
+        assert all(f["time_label"] != "03:30" for f in today["feeds"])
 
     def test_zero_duration_feeds_are_point_marks(self, snap):
         p = views.actogram_payload(snap, SETTINGS, self.NOW, 7)

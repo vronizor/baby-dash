@@ -175,6 +175,11 @@ function feedTip(f, unit) {
   return lines.join("\n");
 }
 
+function solidTip(f) {
+  const note = f.note ? (f.note.length > 40 ? `${f.note.slice(0, 39)}…` : f.note) : "";
+  return `Solids ${f.time_label}${note ? ` · ${note}` : ""}`;
+}
+
 function tipStyle() {
   return { fill: css("--tip-bg"), stroke: css("--tip-border"), fontSize: 12 };
 }
@@ -190,6 +195,7 @@ function renderActogram() {
   const flat = key => rows.flatMap(r => r[key].map(d => ({ ...d, label: r.label })));
   const sleeps = flat("sleeps");
   const feeds = flat("feeds");
+  const solids = flat("solids");
   const nights = flat("night");
   const progress = flat("sleep_in_progress");
   const suspectRows = rows.filter(r => r.suspect_gap).map(r => ({ label: r.label, x1: 0, x2: r.length_h }));
@@ -204,6 +210,7 @@ function renderActogram() {
       title: `Sleep ${s.start_label}–${s.end_label} · ${fmtDur(s.duration_h)}`,
     })),
     ...feeds.map(f => ({ x: f.h, label: f.label, title: feedTip(f, unit) })),
+    ...solids.map(f => ({ x: f.h, label: f.label, title: solidTip(f) })),
   ];
 
   const plot = Plot.plot({
@@ -238,6 +245,10 @@ function renderActogram() {
       }),
       Plot.dot(feeds.filter(f => f.amount_missing), {
         x: "h", y: "label", r: ring, stroke: css("--feed"), strokeWidth: 1.6, strokeDasharray: "2,2", fill: "none",
+      }),
+      Plot.dot(solids, {
+        x: "h", y: "label", symbol: "diamond", r: ring + 1, fill: css("--solid"),
+        stroke: css("--solid-edge"), strokeWidth: 1,
       }),
       today ? Plot.tickX([{ h: p.now_h, label: today.label }], { x: "h", y: "label", stroke: css("--ink"), strokeWidth: 2 }) : null,
       Plot.tip(tips, Plot.pointer({ x: "x", y: "label", title: "title", maxRadius: 28, ...tipStyle() })),
