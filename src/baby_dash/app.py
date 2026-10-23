@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,7 +9,7 @@ from typing import Any
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from baby_dash import views
@@ -17,6 +18,17 @@ from baby_dash.config import Settings
 from baby_dash.store import Clock, Store, StoreState, utc_now
 
 STATIC = Path(__file__).parent / "static"
+VERSIONED = ("app.css", "app.js")
+
+
+def versioned_index() -> str:
+    # /static has no Cache-Control, so browsers kept a heuristically "fresh" app.css
+    # after a deploy; content-hashed URLs make every change a new URL.
+    html = (STATIC / "index.html").read_text()
+    for name in VERSIONED:
+        digest = hashlib.sha256((STATIC / name).read_bytes()).hexdigest()[:10]
+        html = html.replace(f'/static/{name}"', f'/static/{name}?v={digest}"')
+    return html
 
 
 def create_app(
@@ -38,6 +50,7 @@ def create_app(
     app.state.store = store
     app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
+    index_html = versioned_index()
 
     def respond(state: StoreState, build, on_error: dict[str, Any] | None = None) -> JSONResponse:
         now = clock()
@@ -49,8 +62,8 @@ def create_app(
         return JSONResponse(body, headers={"Cache-Control": "no-store"})
 
     @app.get("/", include_in_schema=False)
-    async def index() -> FileResponse:
-        return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
+    async def index() -> HTMLResponse:
+        return HTMLResponse(index_html, headers={"Cache-Control": "no-cache"})
 
     @app.get("/api/now")
     async def now_endpoint() -> JSONResponse:

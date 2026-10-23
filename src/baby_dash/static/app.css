@@ -82,6 +82,10 @@ main {
 .top #child-name { font-weight: 500; }
 .top #child-name::before { content: "· "; }
 #updated { flex: none; font-size: 12px; }
+@media (min-width: 600px) {
+  .brand-mark { width: 44px; height: 44px; border-radius: 11px; }
+  .top h1 { font-size: 24px; }
+}
 
 .banner { border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; }
 .banner.stale { background: var(--warn-bg); color: var(--warn-ink); }

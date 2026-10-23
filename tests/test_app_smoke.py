@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from datetime import datetime, timedelta
 
 import httpx
@@ -183,3 +184,13 @@ def test_client_paginates_until_next_is_null():
     feeds = asyncio.run(client.get_all("/api/feedings/"))
     assert len(feeds) == len(bb.data["feedings"])
     assert [p["offset"] for _, path, p in bb.calls] == ["0", "25", "50", "75", "100"]
+
+
+def test_index_links_content_versioned_assets():
+    app, _, _ = make()
+    with TestClient(app) as c:
+        html = c.get("/").text
+        for name in ("app.css", "app.js"):
+            m = re.search(rf'/static/{re.escape(name)}\?v=([0-9a-f]{{10}})"', html)
+            assert m, name
+            assert c.get(f"/static/{name}?v={m.group(1)}").status_code == 200
