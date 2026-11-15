@@ -25,6 +25,8 @@ phone (tailnet) ──► Caddy ──► baby-dash (FastAPI, :8080) ──► b
 
 4. Add the Caddy site block below and reload Caddy.
 
+Update: push a release tag (`git tag v1.2 && git push origin v1.2`, or a release on GitHub). The Pi deploys it within 5 minutes and rolls back if it doesn't come up; pushing to `main` alone deploys nothing. By hand on the Pi: `deploy babydash`. Don't `git pull` in the Pi's checkout.
+
 The image is multi-arch-friendly (`python:3.12-slim-bookworm`, pure-Python plus polars wheels) and runs as a non-root user. Build it on the Pi itself (`docker compose build`) or with `docker buildx build --platform linux/arm64`.
 
 > **Raspberry Pi 4 note:** if the container dies with `Illegal instruction`, the polars wheel targets newer ARM cores than the Pi 4's Cortex-A72. Switch the dependency to `polars[rtcompat]` (`uv add 'polars[rtcompat]'`) and rebuild. The Pi 5 is fine.
