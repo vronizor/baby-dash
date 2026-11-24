@@ -50,6 +50,7 @@ phone (tailnet) ──► Caddy ──► baby-dash (FastAPI, :8080) ──► b
 | `NIGHT_START` / `NIGHT_END` | `20:00` / `07:00` | Fixed night window for day/night splits |
 | `FEED_MERGE_MIN` | `20` | Feeds starting within this many minutes of the previous feed's end merge into one episode |
 | `SLEEP_MERGE_MIN` | `5` | Sleeps separated by less than this merge into one sleep |
+| `FEED_FLOOR_MIN` | `5` | Minimum duration given to a feed when cutting sleep into stretches |
 | `BASELINE_DAYS` | `3` | Window for the "usual" ranges on the Now tiles |
 | `MIN_BASELINE_N` | `6` | Below this many observations, show "not enough data" instead of a range |
 | `CACHE_TTL_S` | `60` | API cache TTL |
@@ -76,9 +77,10 @@ All "day" bucketing uses `ROW_START`. A baby day is labelled by the calendar dat
 **Inter-feed gap.** Time between consecutive episode starts. A gap is tagged night or day by where its *start* falls relative to the night window.
 
 **Sleeps.** Merge per `SLEEP_MERGE_MIN`. Then:
-- **Wake window:** time from a sleep's end to the next sleep's start.
-- **Longest night stretch:** for each night window, the longest single merged sleep whose midpoint lies inside the window, measured unclipped.
-- **Sleep per baby day, day vs night:** sum of each sleep's overlap with the night window vs outside it. Sleeps crossing `ROW_START` are split across rows.
+- **Wake window:** time from a sleep's end to the next sleep's start (uses the merged sleeps, uncut).
+- **Stretches:** a night is usually logged as one sleep entry, bedtime to morning, with the night feeds inside it. Each merged sleep is cut at every feed episode it contains. A feed shorter than `FEED_FLOOR_MIN` (including instant entries back-filled in the morning) is treated as lasting `FEED_FLOOR_MIN` from its start.
+- **Longest night stretch:** for each night window, the longest single stretch whose midpoint lies inside the window, measured unclipped.
+- **Sleep per baby day, day vs night:** sum of each stretch's overlap with the night window vs outside it, so feed time is not counted as sleep. Stretches crossing `ROW_START` are split across rows.
 
 **Usual ranges (Now tiles).** Median, P25 and P75, plus n, over the last `BASELINE_DAYS`:
 - feed gaps from the **same period** (day or night) as the current time, since night gaps are structurally longer;

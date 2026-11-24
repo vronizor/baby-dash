@@ -235,8 +235,8 @@ def trends_payload(snapshot: Snapshot, settings: Settings, now: datetime, days: 
 
     table = (
         rows.select("label", "row_start", "row_end")
-        .join(metrics.sleep_by_day(d.sleeps, rows, nights), on="label")
-        .join(metrics.longest_night_by_day(d.sleeps, rows, nights), on="label")
+        .join(metrics.sleep_by_day(d.stretches, rows, nights), on="label")
+        .join(metrics.longest_night_by_day(d.stretches, rows, nights), on="label")
         .join(metrics.feeding_by_day(snapshot.data.feeds, d.episodes, rows, rules), on="label")
         .join(metrics.suspect_days(d.suspects, rows), on="label")
         .sort("label")

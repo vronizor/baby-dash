@@ -25,6 +25,7 @@ def utc_now() -> datetime:
 class Derived:
     episodes: pl.DataFrame
     sleeps: pl.DataFrame
+    stretches: pl.DataFrame
     suspects: pl.DataFrame
     feed_gaps: pl.DataFrame
     wake_windows: pl.DataFrame
@@ -37,6 +38,7 @@ def derive(data: Normalized, rules: Rules) -> Derived:
     return Derived(
         episodes=episodes,
         sleeps=sleeps,
+        stretches=metrics.sleep_stretches(sleeps, episodes, rules),
         suspects=suspects,
         feed_gaps=metrics.mark_suspect(metrics.feed_gaps(episodes, rules), suspects),
         wake_windows=metrics.mark_suspect(metrics.wake_windows(sleeps, rules), suspects),
