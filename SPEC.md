@@ -80,6 +80,7 @@ All "day" bucketing uses `ROW_START`. A baby day is labelled by the calendar dat
 - **Wake window:** time from a sleep's end to the next sleep's start (uses the merged sleeps, uncut).
 - **Stretches:** a night is usually logged as one sleep entry, bedtime to morning, with the night feeds inside it. Each merged sleep is cut at every feed episode it contains. A feed shorter than `FEED_FLOOR_MIN` (including instant entries back-filled in the morning) is treated as lasting `FEED_FLOOR_MIN` from its start.
 - **Longest night stretch:** for each night window, the longest single stretch whose midpoint lies inside the window, measured unclipped.
+- **Night feeds:** per night, feed episodes starting strictly between bedtime and morning wake, i.e. the first start and last end of the merged sleeps whose midpoint lies in the night window. Null when no night sleep is logged.
 - **Sleep per baby day, day vs night:** sum of each stretch's overlap with the night window vs outside it, so feed time is not counted as sleep. Stretches crossing `ROW_START` are split across rows.
 
 **Usual ranges (Now tiles).** Median, P25 and P75, plus n, over the last `BASELINE_DAYS`:
@@ -95,7 +96,7 @@ If n < `MIN_BASELINE_N`, return no range and say so.
 - `GET /` → the page.
 - `GET /api/now` → last feed episode (time, kind, volume), time since; current state (asleep from timer or open sleep, awake since last sleep end, or unknown); usual feed-gap range for the current period; usual wake-window range; n for each; any running timer with its name and start; deep-link URLs.
 - `GET /api/actogram?days=7|14` → per row: date label, sleep segments (start/end in hours since `ROW_START`), feed marks (hour, kind, volume, amount_missing), `suspect_gap`, `is_partial` for today.
-- `GET /api/trends?days=14|30` → per baby day: longest night stretch, night sleep, day sleep, bottle volume, breastfeed episode count, flags. Plus the list of feed gaps (time of day, length, period) for the gap scatter.
+- `GET /api/trends?days=14|30` → per baby day: longest night stretch, night feeds, night sleep, day sleep, bottle volume, breastfeed episode count, flags. Plus the list of feed gaps (time of day, length, period) for the gap scatter.
 - `GET /healthz` → 200 if the last Baby Buddy fetch succeeded within 3× TTL.
 
 All times returned as ISO strings in `TZ` plus precomputed hour offsets, so the client never does timezone math.
@@ -118,6 +119,7 @@ Top to bottom, single scroll, no tabs:
    - suspect days hatched.
 3. **Trends** — small stacked charts sharing one date x-axis (no dual axes):
    - longest night stretch with a 5-day rolling median;
+   - night feeds per night;
    - sleep per day split night/day;
    - bottle volume per day;
    - breastfeed episodes per day.
