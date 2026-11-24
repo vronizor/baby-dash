@@ -235,15 +235,16 @@ def trends_payload(snapshot: Snapshot, settings: Settings, now: datetime, days: 
 
     table = (
         rows.select("label", "row_start", "row_end")
-        .join(metrics.sleep_by_day(d.sleeps, rows, nights), on="label")
-        .join(metrics.longest_night_by_day(d.sleeps, rows, nights), on="label")
+        .join(metrics.sleep_by_day(d.stretches, rows, nights), on="label")
+        .join(metrics.longest_night_by_day(d.stretches, rows, nights), on="label")
+        .join(metrics.night_feeds_by_day(d.sleeps, d.episodes, rows, nights), on="label")
         .join(metrics.feeding_by_day(snapshot.data.feeds, d.episodes, rows, rules), on="label")
         .join(metrics.suspect_days(d.suspects, rows), on="label")
         .sort("label")
         .with_columns(has_data=pl.col("label").is_in(logged.implode()))
     )
-    value_cols = ["night_sleep_h", "day_sleep_h", "longest_night_h", "bottle_volume", "bottle_missing",
-                  "breast_episodes", "feed_episodes"]
+    value_cols = ["night_sleep_h", "day_sleep_h", "longest_night_h", "night_feeds", "bottle_volume",
+                  "bottle_missing", "breast_episodes", "feed_episodes"]
     table = table.with_columns(
         pl.when(pl.col("has_data")).then(pl.col(c)).otherwise(None).alias(c) for c in value_cols
     ).with_columns(
@@ -264,6 +265,7 @@ def trends_payload(snapshot: Snapshot, settings: Settings, now: datetime, days: 
             "bottle_missing": r["bottle_missing"],
             "breast_episodes": r["breast_episodes"],
             "feed_episodes": r["feed_episodes"],
+            "night_feeds": r["night_feeds"],
         })
     return {"days": days, "rows": out_rows, **gap_scatter(snapshot, rules, now)}
 

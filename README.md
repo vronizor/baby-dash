@@ -68,6 +68,7 @@ The write check POSTs an *empty* body to `/api/feedings/`. Django REST Framework
 | `NIGHT_START` / `NIGHT_END` | `20:00` / `07:00` | Fixed night window |
 | `FEED_MERGE_MIN` | `20` | Feeds starting ≤ this many minutes after the episode's end join it |
 | `SLEEP_MERGE_MIN` | `5` | Sleeps separated by < this merge |
+| `FEED_FLOOR_MIN` | `5` | Feeds cut sleep into stretches; shorter or instant feeds count as this long |
 | `BASELINE_DAYS` | `3` | Window for the "usual" ranges |
 | `MIN_BASELINE_N` | `6` | Below this many observations, "not enough data" |
 | `CACHE_TTL_S` | `60` | API cache TTL |

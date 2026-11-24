@@ -19,6 +19,7 @@ class Rules:
     night_end: time = time(7, 0)
     feed_merge: timedelta = timedelta(minutes=20)
     sleep_merge: timedelta = timedelta(minutes=5)
+    feed_floor: timedelta = timedelta(minutes=5)
     baseline_days: int = 3
     min_baseline_n: int = 6
     suspect_day_gap: timedelta = timedelta(hours=6)
@@ -58,6 +59,7 @@ class Settings:
             night_end=_parse_time(env, "NIGHT_END", "07:00"),
             feed_merge=timedelta(minutes=_parse_int(env, "FEED_MERGE_MIN", 20)),
             sleep_merge=timedelta(minutes=_parse_int(env, "SLEEP_MERGE_MIN", 5)),
+            feed_floor=timedelta(minutes=_parse_int(env, "FEED_FLOOR_MIN", 5)),
             baseline_days=_parse_int(env, "BASELINE_DAYS", 3, minimum=1),
             min_baseline_n=_parse_int(env, "MIN_BASELINE_N", 6, minimum=1),
         )

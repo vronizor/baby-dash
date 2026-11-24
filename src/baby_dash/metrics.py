@@ -66,6 +66,35 @@ def merge_sleeps(sleeps: pl.DataFrame, rules: Rules) -> pl.DataFrame:
     return merged.select("start", "end", duration_h=hours(pl.col("end") - pl.col("start")))
 
 
+def sleep_stretches(merged_sleeps: pl.DataFrame, episodes: pl.DataFrame, rules: Rules) -> pl.DataFrame:
+    floored = episodes.select(
+        "start", end=pl.max_horizontal("end", pl.col("start") + rules.feed_floor)
+    )
+    cuts = (
+        _merge_ids(floored, pl.col("start") > pl.col("_prev_end"))
+        .group_by("_group")
+        .agg(c_start=pl.col("start").min(), c_end=pl.col("end").max())
+    )
+    sleeps = merged_sleeps.select("start", "end").with_row_index("_sid")
+    hits = sleeps.join_where(cuts, pl.col("c_start") < pl.col("end"), pl.col("c_end") > pl.col("start"))
+    nth = pl.int_range(pl.len()).over("_sid")
+    starts = (
+        pl.concat([sleeps.select("_sid", b=pl.col("start")), hits.select("_sid", b=pl.col("c_end"))])
+        .sort("_sid", "b").with_columns(_k=nth)
+    )
+    ends = (
+        pl.concat([sleeps.select("_sid", b=pl.col("end")), hits.select("_sid", b=pl.col("c_start"))])
+        .sort("_sid", "b").with_columns(_k=nth)
+    )
+    return (
+        starts.join(ends, on=["_sid", "_k"], suffix="_end")
+        .select(start=pl.col("b"), end=pl.col("b_end"))
+        .filter(pl.col("end") > pl.col("start"))
+        .sort("start")
+        .with_columns(duration_h=hours(pl.col("end") - pl.col("start")))
+    )
+
+
 def _consecutive(frame: pl.DataFrame, start: str, end: str, rules: Rules) -> pl.DataFrame:
     return (
         frame.sort("start")
@@ -137,6 +166,31 @@ def longest_night_by_day(merged_sleeps: pl.DataFrame, rows: pl.DataFrame, nights
         .agg(longest_night_h=pl.col("duration_h").max())
     )
     return rows.select("label").join(longest, on="label", how="left")
+
+
+def night_feeds_by_day(
+    merged_sleeps: pl.DataFrame, episodes: pl.DataFrame, rows: pl.DataFrame, nights: pl.DataFrame
+) -> pl.DataFrame:
+    spans = (
+        merged_sleeps.with_columns(mid=pl.col("start") + (pl.col("end") - pl.col("start")) / 2)
+        .join_where(
+            nights.select("night_start", "night_end", "label"),
+            pl.col("mid") >= pl.col("night_start"),
+            pl.col("mid") < pl.col("night_end"),
+        )
+        .group_by("label")
+        .agg(bed=pl.col("start").min(), wake=pl.col("end").max())
+    )
+    counts = (
+        spans.join_where(episodes.select(f_start="start"), pl.col("f_start") > pl.col("bed"),
+                         pl.col("f_start") < pl.col("wake"))
+        .group_by("label")
+        .agg(night_feeds=pl.len().cast(pl.Int64))
+    )
+    per_night = spans.join(counts, on="label", how="left").select(
+        "label", night_feeds=pl.col("night_feeds").fill_null(0)
+    )
+    return rows.select("label").join(per_night, on="label", how="left")
 
 
 def suspect_intervals(feeds: pl.DataFrame, merged_sleeps: pl.DataFrame, rules: Rules) -> pl.DataFrame:

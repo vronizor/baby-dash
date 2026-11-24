@@ -159,6 +159,99 @@ class TestSleepByDay:
         assert totals.to_dicts() == [{"label": date(2026, 10, 6), "night_sleep_h": 0.0, "day_sleep_h": 0.0}]
 
 
+class TestSleepStretches:
+    def _stretches(self, rules, sleeps, feeds):
+        merged = metrics.merge_sleeps(sleeps_of(sleeps), rules)
+        return metrics.sleep_stretches(merged, metrics.feed_episodes(feeds_of(feeds), rules), rules)
+
+    def test_night_envelope_is_cut_at_each_feed(self, rules):
+        out = self._stretches(rules, [sleep("2026-10-06 19:00", "2026-10-07 07:00")], [
+            feeding("2026-10-06 22:00", "2026-10-06 22:20"),
+            feeding("2026-10-07 02:00", "2026-10-07 02:15", "right breast"),
+        ])
+        assert out["start"].to_list() == [at("2026-10-06 19:00"), at("2026-10-06 22:20"), at("2026-10-07 02:15")]
+        assert out["end"].to_list() == [at("2026-10-06 22:00"), at("2026-10-07 02:00"), at("2026-10-07 07:00")]
+        assert out["duration_h"].to_list() == pytest.approx([3.0, 3 + 40 / 60, 4.75])
+
+    def test_instant_or_short_feed_is_floored(self, rules):
+        out = self._stretches(rules, [sleep("2026-10-06 19:00", "2026-10-07 07:00")], [
+            feeding("2026-10-06 22:00"),
+            feeding("2026-10-07 02:00", "2026-10-07 02:02"),
+        ])
+        assert out["duration_h"].to_list() == pytest.approx([3.0, 4 - 5 / 60, 5 - 5 / 60])
+
+    def test_side_switch_cuts_once(self, rules):
+        out = self._stretches(rules, [sleep("2026-10-06 19:00", "2026-10-07 07:00")], [
+            feeding("2026-10-07 01:00", "2026-10-07 01:10"),
+            feeding("2026-10-07 01:15", "2026-10-07 01:25", "right breast"),
+        ])
+        assert out["duration_h"].to_list() == pytest.approx([6.0, 5 + 35 / 60])
+
+    def test_feed_straddling_sleep_edges_trims_without_empty_pieces(self, rules):
+        out = self._stretches(rules, [sleep("2026-10-06 19:00", "2026-10-07 06:30")], [
+            feeding("2026-10-06 18:40", "2026-10-06 19:10"),
+            feeding("2026-10-07 06:20", "2026-10-07 06:50"),
+            feeding("2026-10-07 10:00", "2026-10-07 10:20"),
+        ])
+        assert out["start"].to_list() == [at("2026-10-06 19:10")]
+        assert out["end"].to_list() == [at("2026-10-07 06:20")]
+
+    def test_sleeps_without_feeds_pass_through(self, rules):
+        out = self._stretches(rules, [sleep("2026-10-06 13:00", "2026-10-06 14:00")], [])
+        assert out["duration_h"].to_list() == pytest.approx([1.0])
+
+    def test_floor_is_configurable(self, rules):
+        from dataclasses import replace
+        from datetime import timedelta
+
+        merged = metrics.merge_sleeps(sleeps_of([sleep("2026-10-06 19:00", "2026-10-07 07:00")]), rules)
+        eps = metrics.feed_episodes(feeds_of([feeding("2026-10-06 22:00")]), rules)
+        out = metrics.sleep_stretches(merged, eps, replace(rules, feed_floor=timedelta(0)))
+        assert out["duration_h"].to_list() == pytest.approx([3.0, 9.0])
+
+    def test_longest_stretch_and_night_total_exclude_feeds(self, rules):
+        rows = _rows(rules, date(2026, 10, 7))
+        nights = nights_for_rows(rows, rules)
+        out = self._stretches(rules, [sleep("2026-10-06 20:00", "2026-10-07 07:00")], [
+            feeding("2026-10-06 23:00", "2026-10-06 23:20"),
+            feeding("2026-10-07 03:00"),
+        ])
+        longest = metrics.longest_night_by_day(out, rows, nights)["longest_night_h"].to_list()
+        assert longest == pytest.approx([4 - 5 / 60])
+        totals = metrics.sleep_by_day(out, rows, nights).row(0, named=True)
+        assert totals["night_sleep_h"] == pytest.approx(11 - 20 / 60 - 5 / 60)
+
+
+class TestNightFeeds:
+    def test_counts_feeds_between_bedtime_and_wake_across_a_split_night(self, rules):
+        rows = _rows(rules, date(2026, 10, 7), date(2026, 10, 8))
+        merged = metrics.merge_sleeps(sleeps_of([
+            sleep("2026-10-06 16:00", "2026-10-06 17:00"),
+            sleep("2026-10-06 19:30", "2026-10-07 01:55"),
+            sleep("2026-10-07 03:00", "2026-10-07 07:00"),
+        ]), rules)
+        eps = metrics.feed_episodes(feeds_of([
+            feeding("2026-10-06 16:30"),
+            feeding("2026-10-06 19:00", "2026-10-06 19:25"),
+            feeding("2026-10-06 22:30", "2026-10-06 22:45"),
+            feeding("2026-10-06 22:50", "2026-10-06 23:00", "right breast"),
+            feeding("2026-10-07 02:00", "2026-10-07 02:20"),
+            feeding("2026-10-07 07:00", "2026-10-07 07:20"),
+        ]), rules)
+        out = metrics.night_feeds_by_day(merged, eps, rows, nights_for_rows(rows, rules))
+        assert out.to_dicts() == [
+            {"label": date(2026, 10, 7), "night_feeds": 2},
+            {"label": date(2026, 10, 8), "night_feeds": None},
+        ]
+
+    def test_night_slept_through_is_zero(self, rules):
+        rows = _rows(rules, date(2026, 10, 7))
+        merged = metrics.merge_sleeps(sleeps_of([sleep("2026-10-06 19:30", "2026-10-07 06:30")]), rules)
+        eps = metrics.feed_episodes(feeds_of([feeding("2026-10-06 19:00")]), rules)
+        out = metrics.night_feeds_by_day(merged, eps, rows, nights_for_rows(rows, rules))
+        assert out["night_feeds"].to_list() == [0]
+
+
 class TestLongestNightStretch:
     def test_longest_sleep_with_midpoint_in_night_measured_unclipped(self, rules):
         rows = _rows(rules, date(2026, 10, 7))
