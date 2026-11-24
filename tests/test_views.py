@@ -79,6 +79,7 @@ class TestEdgeCaseFixture:
         today, yday = _row(p, "2026-10-06"), _row(p, "2026-10-05")
         assert (today["night_sleep_h"], today["day_sleep_h"], today["longest_night_h"]) == (8.667, 2.333, 3.333)
         assert (today["bottle_volume"], today["breast_episodes"], today["feed_episodes"]) == (210.0, 2, 4)
+        assert (today["night_feeds"], yday["night_feeds"]) == (2, None)
         assert (yday["bottle_volume"], yday["bottle_missing"], yday["breast_episodes"]) == (120.0, 1, 3)
         assert today["is_partial"]
         earlier = _row(p, "2026-10-04")

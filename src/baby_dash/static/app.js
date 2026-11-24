@@ -293,7 +293,7 @@ function renderTrends() {
   const op = r => (r.is_partial ? 0.45 : 1);
   const unit = state.now?.amount_unit ?? "ml";
   $("[data-unit]").textContent = `· ${unit}`;
-  const ids = ["#trend-longest", "#trend-sleep", "#trend-bottle", "#trend-breast"];
+  const ids = ["#trend-longest", "#trend-night-feeds", "#trend-sleep", "#trend-bottle", "#trend-breast"];
   if (!rows.some(r => r.has_data)) {
     ids.forEach(id => empty($(id), "Not enough data yet."));
     return;
@@ -314,6 +314,21 @@ function renderTrends() {
         x: "i", y: "longest_night_h", ...tipStyle(),
         title: r => tipTitle(r, `longest ${fmtDur(r.longest_night_h)}` +
           (r.longest_night_median_h != null ? `\n5-night median ${fmtDur(r.longest_night_median_h)}` : "")),
+      })),
+    ],
+  });
+
+  const nightFeeds = withData.filter(r => r.night_feeds != null);
+  const topNightFeeds = Math.max(3, ...nightFeeds.map(r => r.night_feeds));
+  if (!nightFeeds.length) empty($("#trend-night-feeds"), "No night sleep logged in this range.");
+  else smallChart($("#trend-night-feeds"), rows, {
+    y: { domain: [0, topNightFeeds], ticks: Math.min(topNightFeeds, 3), tickFormat: "d" },
+    marks: [
+      suspectBackdrop(rows, topNightFeeds),
+      Plot.barY(nightFeeds, { x: "i", y: "night_feeds", fill: css("--sleep"), opacity: op, rx: 2 }),
+      Plot.tip(nightFeeds, Plot.pointerX({
+        x: "i", y: "night_feeds", ...tipStyle(),
+        title: r => tipTitle(r, `${r.night_feeds} night feed(s)`),
       })),
     ],
   });

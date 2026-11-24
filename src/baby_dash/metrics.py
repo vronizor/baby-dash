@@ -168,6 +168,31 @@ def longest_night_by_day(merged_sleeps: pl.DataFrame, rows: pl.DataFrame, nights
     return rows.select("label").join(longest, on="label", how="left")
 
 
+def night_feeds_by_day(
+    merged_sleeps: pl.DataFrame, episodes: pl.DataFrame, rows: pl.DataFrame, nights: pl.DataFrame
+) -> pl.DataFrame:
+    spans = (
+        merged_sleeps.with_columns(mid=pl.col("start") + (pl.col("end") - pl.col("start")) / 2)
+        .join_where(
+            nights.select("night_start", "night_end", "label"),
+            pl.col("mid") >= pl.col("night_start"),
+            pl.col("mid") < pl.col("night_end"),
+        )
+        .group_by("label")
+        .agg(bed=pl.col("start").min(), wake=pl.col("end").max())
+    )
+    counts = (
+        spans.join_where(episodes.select(f_start="start"), pl.col("f_start") > pl.col("bed"),
+                         pl.col("f_start") < pl.col("wake"))
+        .group_by("label")
+        .agg(night_feeds=pl.len().cast(pl.Int64))
+    )
+    per_night = spans.join(counts, on="label", how="left").select(
+        "label", night_feeds=pl.col("night_feeds").fill_null(0)
+    )
+    return rows.select("label").join(per_night, on="label", how="left")
+
+
 def suspect_intervals(feeds: pl.DataFrame, merged_sleeps: pl.DataFrame, rules: Rules) -> pl.DataFrame:
     activity = pl.concat([feeds.select("start", "end"), merged_sleeps.select("start", "end")])
     holes = (
